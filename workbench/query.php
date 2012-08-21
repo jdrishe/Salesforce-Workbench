@@ -4,6 +4,11 @@ require_once 'soxl/QueryObjects.php';
 require_once 'session.php';
 require_once 'shared.php';
 require_once 'async/QueryFutureTask.php';
+addFooterScript("<script type='text/javascript' src='" . getPathToStaticResource('/script/getElementsByClassName.js') . "'></script>");
+
+if ($_POST['jsQuerySubmit'] == 'Query') {
+     $_POST['querySubmit'] ='Query';
+}
 
 $defaultSettings['numFilters'] = 1;
 //clear the form if the user changes the object
@@ -166,13 +171,28 @@ function displayQueryForm($queryRequest) {
 
     print <<<QUERY_BUILDER_SCRIPT
 
+function wbQuerySubmitHandler() {
+    disableWhileAsyncLoading(true);
+    parentChildRelationshipQueryBlocker();
+    document.query_form.jsQuerySubmit.value = 'Query';
+    document.query_form.submit();
+}
+
+function disableWhileAsyncLoading(isDisabled) {
+    var disableWhileAsyncLoadingElements = getElementsByClassName("disableWhileAsyncLoading");
+
+    for (i in disableWhileAsyncLoadingElements) {
+        disableWhileAsyncLoadingElements[i].disabled = isDisabled;
+    }
+}
+
 function parentChildRelationshipQueryBlocker() {
     var soql = document.getElementById('soql_query_textarea').value.toUpperCase();
-    
+
     if (soql.indexOf('(SELECT') != -1 && soql.indexOf('IN (SELECT') == -1 && document.getElementById('export_action_csv').checked) {
         return confirm ("Export of parent-to-child relationship queries to CSV are not yet supported by Workbench and may give unexpected results. Are you sure you wish to continue?");
     }
-    
+
 }
 
 function doesQueryHaveName() {
@@ -457,6 +477,7 @@ QUERY_BUILDER_SCRIPT;
         print "<form method='POST' id='query_form' name='query_form' action=''>\n";
     }
     print "<input type='hidden' name='justUpdate' value='0' />";
+    print "<input type='hidden' name='jsQuerySubmit' value='0' />";
     print "<input type='hidden' id='numFilters' name='numFilters' value='" . count($queryRequest->getFilters()) ."' />";
     print "<p class='instructions'>Choose the object, fields, and critera to build a SOQL query below:</p>\n";
     print "<table border='0' style='width: 100%;'>\n";
@@ -597,7 +618,7 @@ QUERY_BUILDER_SCRIPT;
         "</td></tr>\n";
 
 
-    print "<tr><td colspan=1><input type='submit' name='querySubmit' class='disableWhileAsyncLoading' value='Query' onclick='return parentChildRelationshipQueryBlocker();' />\n" .
+    print "<tr><td colspan=1><input type='submit' name='querySubmit' class='disableWhileAsyncLoading' value='Query' onClick='wbQuerySubmitHandler();' />\n" .
         "<input type='reset' value='Reset' class='disableWhileAsyncLoading' />\n" .
         "</td>";
 
@@ -605,7 +626,7 @@ QUERY_BUILDER_SCRIPT;
     print "<td colspan=4 align='right'>";
 
     print "&nbsp;Run: " .
-        "<select name='getQr' style='width: 10em;' onChange='document.query_form.submit();'>" .
+        "<select name='getQr' class='disableWhileAsyncLoading' style='width: 10em;' onChange='document.query_form.submit();'>" .
         "<option value='' selected='selected'></option>";
     if (isset($_SESSION['savedQueryRequests'])) {
         foreach ($_SESSION['savedQueryRequests'] as $qrName => $qr) {
