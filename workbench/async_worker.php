@@ -35,6 +35,7 @@ while (true) {
     try {
         $task = FutureTask::dequeue(30);
         pcntl_signal(SIGTERM, array($task, "handleSignal"));
+        pcntl_signal(SIGINT,  array($task, "handleSignal"));
         set_time_limit(WorkbenchConfig::get()->value('asyncTimeoutSeconds'));
         $task->execute();
     } catch (TimeoutException $e) {

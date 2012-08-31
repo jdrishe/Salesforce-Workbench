@@ -131,7 +131,11 @@ abstract class FutureTask {
             case SIGTERM:
                 $this->terminate();
                 exit(0);
+            case SIGINT:
+                workbenchLog(LOG_INFO, "SIGINT",  "Exiting immediately");
+                exit(0);
             default:
+                workbenchLog(LOG_INFO, "UnknownSignal", $signal);
                 // ignore
         }
     }
