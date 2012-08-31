@@ -17,6 +17,7 @@ class QueryFutureTask extends FutureTask {
     }
 
     function perform() {
+        sleep(15);
         ob_start();
 
         $queryTimeStart = microtime(true);

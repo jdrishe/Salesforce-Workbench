@@ -19,6 +19,7 @@ class ApexExecuteFutureTask extends FutureTask {
     }
 
     function perform() {
+        sleep(15);
         WorkbenchContext::get()->getApexConnection()->setDebugLevels($this->logCategory, $this->logCategoryLevel);
         $executeAnonymousResultWithDebugLog = WorkbenchContext::get()->getApexConnection()->executeAnonymous($this->executeAnonymousBlock);
 
