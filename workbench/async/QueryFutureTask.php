@@ -12,6 +12,10 @@ class QueryFutureTask extends FutureTask {
         $this->queryLocator = $queryLocator;
     }
 
+    function idempotent() {
+        return true;
+    }
+
     function perform() {
         ob_start();
 

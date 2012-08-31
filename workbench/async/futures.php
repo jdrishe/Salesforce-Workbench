@@ -58,6 +58,26 @@ abstract class FutureTask {
     }
 
     /**
+     * Re-enqueues this task on the front of the queue.
+     *
+     * @return FutureResult
+     */
+    public function reenqueue() {
+        redis()->lpush(self::QUEUE, crypto_serialize($this));
+        workbenchLog(LOG_INFO, "FutureTaskReEnqueue", get_class($this) . "-" . $this->asyncId);
+        return new FutureResult($this->asyncId);
+    }
+
+    /**
+     * Subclasses should specify if task is idempotent.
+     * This will determine re-try behavior on termination
+     *
+     * @abstract
+     * @return boolean
+     */
+    abstract function idempotent();
+
+    /**
      * Subclasses should override for whatever they need to perform.
      * This can be called for sync processing of task
      *
@@ -97,6 +117,50 @@ abstract class FutureTask {
         WorkbenchContext::get()->release();
         WorkbenchConfig::destroy();
         $_COOKIE = array();
+    }
+
+    /**
+     * Handle process signals
+     *
+     * @param $signal
+     */
+    public function handleSignal($signal) {
+        verifyCallingFromCLI();
+
+        switch ($signal) {
+            case SIGTERM:
+                $this->terminate();
+                exit(0);
+            default:
+                // ignore
+        }
+    }
+
+    /**
+     * Handle task early termination
+     */
+    protected function terminate() {
+        verifyCallingFromCLI();
+
+        if ($this->idempotent()) {
+            $this->reenqueue();
+        } else {
+            $this->sendEarlyTerminationError();
+        }
+    }
+
+    /**
+     * Redeems future with an early termination error.
+     * This is used for non-idempotent tasks.
+     */
+    protected function sendEarlyTerminationError() {
+        verifyCallingFromCLI();
+
+        $future = new FutureResult($this->asyncId);
+        workbenchLog(LOG_INFO, "FutureTaskEarlyTermination", get_class($this) . "-" . $this->asyncId);
+        ob_start();
+        displayError("This task terminated prematurely. Please run again, if needed.");
+        $future->redeem(ob_get_clean());
     }
 
     /**

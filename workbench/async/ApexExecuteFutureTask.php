@@ -14,6 +14,10 @@ class ApexExecuteFutureTask extends FutureTask {
         $this->logCategoryLevel = $logCategoryLevel;
     }
 
+    function idempotent() {
+        return false;
+    }
+
     function perform() {
         WorkbenchContext::get()->getApexConnection()->setDebugLevels($this->logCategory, $this->logCategoryLevel);
         $executeAnonymousResultWithDebugLog = WorkbenchContext::get()->getApexConnection()->executeAnonymous($this->executeAnonymousBlock);

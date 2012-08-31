@@ -1,4 +1,6 @@
 <?php
+declare(ticks = 1);
+
 require_once 'shared.php';
 require_once 'config/constants.php';
 require_once 'config/WorkbenchConfig.php';
@@ -31,9 +33,10 @@ workbenchLog(LOG_INFO, "FutureTaskQueueDepth", redis()->llen(FutureTask::QUEUE))
 
 while (true) {
     try {
-        $job = FutureTask::dequeue(30);
+        $task = FutureTask::dequeue(30);
+        pcntl_signal(SIGTERM, array($task, "handleSignal"));
         set_time_limit(WorkbenchConfig::get()->value('asyncTimeoutSeconds'));
-        $job->execute();
+        $task->execute();
     } catch (TimeoutException $e) {
         continue;
     }
