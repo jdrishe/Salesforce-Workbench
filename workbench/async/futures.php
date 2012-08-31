@@ -133,6 +133,7 @@ abstract class FutureTask {
                 exit(0);
             case SIGINT:
                 workbenchLog(LOG_INFO, "SIGINT",  "Exiting immediately");
+                $this->sendEarlyTerminationError();
                 exit(0);
             default:
                 workbenchLog(LOG_INFO, "UnknownSignal", $signal);
