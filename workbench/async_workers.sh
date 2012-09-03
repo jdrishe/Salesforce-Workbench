@@ -14,4 +14,4 @@ inf() {
     done
 }
 
-inf | xargs --max-args=1 --max-procs=$MAX_WORKERS php async_worker.php
+exec php async_worker.php
