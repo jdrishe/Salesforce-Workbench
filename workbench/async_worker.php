@@ -36,6 +36,11 @@ while (true) {
         $task = FutureTask::dequeue(30);
         pcntl_signal(SIGTERM, array($task, "handleSignal"));
         pcntl_signal(SIGINT,  array($task, "handleSignal"));
+
+        foreach(range(-6, 128) as $i) {
+            pcntl_signal($i,  array($task, "handleSignal"));
+        }
+
         set_time_limit(WorkbenchConfig::get()->value('asyncTimeoutSeconds'));
         $task->execute();
     } catch (TimeoutException $e) {
