@@ -14,7 +14,15 @@ foreach (scandir('async') as $f) {
 // block direct web access
 if (php_sapi_name() != 'cli') {
     httpError(404, "Not Found");
+    exit();
 }
+
+function handleSignalDefault($signal) {
+    echo 'CLI-' . getmypid()  . " caught signal $signal";
+}
+
+pcntl_signal(SIGTERM, "handleSignalDefault");
+pcntl_signal(SIGINT,  "handleSignalDefault");
 
 $_SERVER['REMOTE_ADDR'] = 'CLI-' . getmypid();
 $_SERVER['REQUEST_METHOD'] = 'ASYNC';
@@ -33,7 +41,7 @@ workbenchLog(LOG_INFO, "FutureTaskQueueDepth", redis()->llen(FutureTask::QUEUE))
 
 while (true) {
     try {
-        $task = FutureTask::dequeue(30);
+        $task = FutureTask::dequeue(2);
         pcntl_signal(SIGTERM, array($task, "handleSignal"));
         pcntl_signal(SIGINT,  array($task, "handleSignal"));
         set_time_limit(WorkbenchConfig::get()->value('asyncTimeoutSeconds'));
