@@ -16,4 +16,9 @@ inf() {
 
 trap "echo 'Waiting for graceful shutdown...'; sleep 15" SIGINT SIGTERM
 
-inf | xargs --max-args=1 --max-procs=$MAX_WORKERS php async_worker.php
+#inf | xargs --max-args=1 --max-procs=$MAX_WORKERS php async_worker.php
+
+while true; do
+    echo "."
+    sleep 1
+done
