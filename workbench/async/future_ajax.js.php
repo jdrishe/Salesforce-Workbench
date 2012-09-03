@@ -37,7 +37,7 @@
                     if (ajax.readyState == 4) {
                         if (ajax.status == 200) {
                             container.innerHTML = ajax.responseText;
-                        } else if (ajax.status == 202) {
+                        } else if (ajax.status == 202 || ajax.status == 503) {
                             // 202 means that long poll ended, but still waiting for result
                             container.innerHTML += ".";
                             if (totalTimeWaiting > (<?php echo WorkbenchConfig::get()->value('asyncTimeoutSeconds'); ?>)) {
