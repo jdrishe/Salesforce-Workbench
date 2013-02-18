@@ -40,6 +40,8 @@ if (isset($GLOBALS['REDIS'])) {
     redis()->close();
 }
 
+print_r(getallheaders());
+
 //USAGE: debug($showSuperVars = true, $showSoap = true, $customName = null, $customValue = null)
 debug(true,true,null,null);
 ?>
