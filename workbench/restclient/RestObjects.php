@@ -15,6 +15,9 @@ class RestSObject extends SObject {
                     $this->anyFields[$name] = new RestSObject($value);
                 } else if (isset($value->totalSize, $value->done)) {
                     $this->anyFields[$name] = new RestQueryResult($value);
+                } else if (endsWith($name,'Address', false) && WorkbenchContext::get()->isApiVersionAtLeast(30.0) && $value instanceof stdClass ) {
+                    // TODO: Address and > 30.0 guard should not be needed, but protecting against other stdClass results that might leak in
+                    $this->anyFields[$name] = new RestSObject($value);
                 } else {
                     $this->anyFields[$name] = $value;
                 }
