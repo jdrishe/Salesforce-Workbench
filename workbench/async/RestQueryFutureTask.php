@@ -14,13 +14,24 @@ class RestQueryFutureTask extends QueryFutureTask {
         throw new Exception("Unknown REST query error"); // TODO!
     }
 
+    function resolveAction($queryAction) {
+        switch ($queryAction) {
+            case "Query":
+                return "query";
+            case "QueryAll":
+                return "queryAll";
+            default:
+                throw new Exception("Unknown query action");
+        }
+    }
+
     function query($soqlQuery,$queryAction,$queryLocator = null) {
         $url = "/services/data/";
         $url .= "v". WorkbenchContext::get()->getApiVersion();
         if ($queryLocator) {
             $url .= "/query/" . $queryLocator;
         } else {
-            $url .= "/" . strtolower($queryAction);
+            $url .= "/" . $this->resolveAction($queryAction);
             $url .= "?" . http_build_query(array("q" => $soqlQuery));
         }
 
