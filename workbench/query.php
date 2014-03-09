@@ -78,7 +78,8 @@ if (isset($_POST['queryMore']) && isset($_POST['queryLocator'])) {
 } else if (isset($_POST['querySubmit']) && $_POST['querySubmit']=='Query' && $queryRequest->getSoqlQuery() != null && $queryRequest->getExportTo() == 'csv') {
     if (stripos($_POST['soql_query'], "count()") == false) {
         $task = createQueryTask($queryRequest);
-        $records = $task->query($queryRequest->getSoqlQuery(),$queryRequest->getQueryAction(),null,true);
+        $queryResponse = $task->query($queryRequest->getSoqlQuery(),$queryRequest->getQueryAction(),null);
+        $records = $task->extractRecords($queryRequest->getSoqlQuery(),$queryResponse,true);
         $task->exportQueryAsCsv($records,$queryRequest->getExportTo());
     } else {
         require_once 'header.php';

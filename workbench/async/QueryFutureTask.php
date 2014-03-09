@@ -1,12 +1,12 @@
 <?php
 include_once "futures.php";
 
-class QueryFutureTask extends FutureTask {
+abstract class QueryFutureTask extends FutureTask {
 
-    private $queryRequest;
-    private $queryLocator;
-    private $nextQueryLocator;
-    private $totalQuerySize;
+    protected $queryRequest;
+    protected $queryLocator;
+    protected $nextQueryLocator;
+    protected $totalQuerySize;
 
     function __construct($queryRequest, $queryLocator = null) {
         parent::__construct();
@@ -18,7 +18,8 @@ class QueryFutureTask extends FutureTask {
         ob_start();
 
         $queryTimeStart = microtime(true);
-        $records = $this->query($this->queryRequest->getSoqlQuery(), $this->queryRequest->getQueryAction(), $this->queryLocator);
+        $queryResponse = $this->query($this->queryRequest->getSoqlQuery(), $this->queryRequest->getQueryAction(), $this->queryLocator);
+        $records = $this->extractRecords($this->queryRequest->getSoqlQuery(),$queryResponse);
         $queryTimeEnd = microtime(true);
         $queryTimeElapsed = $queryTimeEnd - $queryTimeStart;
         $this->displayQueryResults($records, $queryTimeElapsed, $this->queryRequest);
@@ -28,34 +29,17 @@ class QueryFutureTask extends FutureTask {
         return $html;
     }
 
-    function query($soqlQuery,$queryAction,$queryLocator = null,$suppressScreenOutput=false) {
-        if (!WorkbenchConfig::get()->value("allowParentRelationshipQueries") && preg_match("/SELECT.*?(\w+\.\w+).*FROM/i", $soqlQuery, $matches)) {
+    protected function knownErrors() {
+        return array("MALFORMED_QUERY", "INVALID_FIELD", "INVALID_TYPE", "INVALID_QUERY_FILTER_OPERATOR", "QUERY_TIMEOUT", "EXCEEDED_ID_LIMIT");
+    }
 
-            $msg = "Parent relationship queries are disabled in Workbench: " . $matches[1];
+    abstract function query($soqlQuery,$queryAction,$queryLocator = null);
 
-            if (WorkbenchConfig::get()->overrideable("allowParentRelationshipQueries")) {
-                $msg .= "\n\nDue to issues rendering query results, parent relationship queries are disabled by default. " .
-                         "If you understand these limitations, parent relationship queries can be enabled under Settings. " .
-                         "Alternatively, parent relationship queries can be run with REST Explorer under the Utilities menu without issue.";
-            }
+    abstract function getQueryResultHeaders($sobject, $tail="");
 
-            throw new WorkbenchHandledException($msg);
-        }
+    abstract function getQueryResultRow($sobject, $escapeHtmlChars=true);
 
-        try {
-            if ($queryAction == 'Query') $queryResponse = WorkbenchContext::get()->getPartnerConnection()->query($soqlQuery);
-            if ($queryAction == 'QueryAll') $queryResponse = WorkbenchContext::get()->getPartnerConnection()->queryAll($soqlQuery);
-        } catch (SoapFault $e) {
-            foreach (array("MALFORMED_QUERY", "INVALID_FIELD", "INVALID_TYPE", "INVALID_QUERY_FILTER_OPERATOR", "QUERY_TIMEOUT", "EXCEEDED_ID_LIMIT") as $known) {
-                if (strpos($e->getMessage(), $known) > -1) {
-                    throw new WorkbenchHandledException($e->getMessage());
-                }
-            }
-            throw $e;
-        }
-
-        if ($queryAction == 'QueryMore' && isset($queryLocator)) $queryResponse = WorkbenchContext::get()->getPartnerConnection()->queryMore($queryLocator);
-
+    function extractRecords($soqlQuery,$queryResponse,$suppressScreenOutput=false) {
         if (stripos($soqlQuery, "count()") && $suppressScreenOutput == false) {
             return $queryResponse->size;
         } else if (!isset($queryResponse->records)) {
@@ -96,67 +80,6 @@ class QueryFutureTask extends FutureTask {
         }
 
         return $records;
-    }
-
-    function getQueryResultHeaders($sobject, $tail="") {
-        if (!isset($headerBufferArray)) {
-            $headerBufferArray = array();
-        }
-
-        if (isset($sobject->Id) && !isset($sobject->fields->Id)) {
-            $headerBufferArray[] = $tail . "Id";
-        }
-
-        if (isset($sobject->fields)) {
-            foreach ($sobject->fields->children() as $field) {
-                $headerBufferArray[] = $tail . htmlspecialchars($field->getName(),ENT_QUOTES);
-            }
-        }
-
-        if (isset($sobject->sobjects)) {
-            foreach ($sobject->sobjects as $sobjects) {
-                $recurse = $this->getQueryResultHeaders($sobjects, $tail . htmlspecialchars($sobjects->type,ENT_QUOTES) . ".");
-                $headerBufferArray = array_merge($headerBufferArray, $recurse);
-            }
-        }
-
-        if (isset($sobject->queryResult)) {
-            if(!is_array($sobject->queryResult)) $sobject->queryResult = array($sobject->queryResult);
-            foreach ($sobject->queryResult as $qr) {
-                $headerBufferArray[] = $qr->records[0]->type;
-            }
-        }
-
-        return $headerBufferArray;
-    }
-
-    function getQueryResultRow($sobject, $escapeHtmlChars=true) {
-
-        if (!isset($rowBuffer)) {
-            $rowBuffer = array();
-        }
-
-        if (isset($sobject->Id) && !isset($sobject->fields->Id)) {
-            $rowBuffer[] = $sobject->Id;
-        }
-
-        if (isset($sobject->fields)) {
-            foreach ($sobject->fields as $datum) {
-                $rowBuffer[] = ($escapeHtmlChars ? htmlspecialchars($datum,ENT_QUOTES) : $datum);
-            }
-        }
-
-        if (isset($sobject->sobjects)) {
-            foreach ($sobject->sobjects as $sobjects) {
-                $rowBuffer = array_merge($rowBuffer, $this->getQueryResultRow($sobjects,$escapeHtmlChars));
-            }
-        }
-
-        if (isset($sobject->queryResult)) {
-            $rowBuffer[] = $sobject->queryResult;
-        }
-
-        return localizeDateTimes($rowBuffer);
     }
 
     function createQueryResultsMatrix($records, $matrixCols, $matrixRows) {
@@ -342,11 +265,17 @@ class QueryFutureTask extends FutureTask {
                 header("Content-Disposition: attachment; filename=$csvFilename");
 
                 //Write first row to CSV and unset variable
-                fputcsv($csvFile, $this->getQueryResultHeaders(new SObject($records[0])));
+                if (!$records[0] instanceof SObject) {
+                    $records[0] = new SObject($records[0]);
+                }
+                fputcsv($csvFile, $this->getQueryResultHeaders($records[0]));
 
                 //Export remaining rows and write to CSV line-by-line
                 foreach ($records as $record) {
-                    fputcsv($csvFile, $this->getQueryResultRow(new SObject($record),false));
+                    if (!$record instanceof SObject) {
+                        $record = new SObject($record);
+                    }
+                    fputcsv($csvFile, $this->getQueryResultRow($record,false));
                 }
 
                 fclose($csvFile) or die("Error closing php://output");
