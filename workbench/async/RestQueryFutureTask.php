@@ -1,5 +1,6 @@
 <?php
 include_once "futures.php";
+require_once "restclient/RestObjects.php";
 
 class RestQueryFutureTask extends QueryFutureTask {
 
@@ -13,11 +14,15 @@ class RestQueryFutureTask extends QueryFutureTask {
         throw new Exception("Unknown REST query error"); // TODO!
     }
 
-    function restQuery($queryAction, $soqlQuery) {
+    function query($soqlQuery,$queryAction,$queryLocator = null) {
         $url = "/services/data/";
         $url .= "v". WorkbenchContext::get()->getApiVersion();
-        $url .= "/" . strtolower($queryAction);
-        $url .= "?" . http_build_query(array("q" => $soqlQuery));
+        if ($queryLocator) {
+            $url .= "/query/" . $queryLocator;
+        } else {
+            $url .= "/" . strtolower($queryAction);
+            $url .= "?" . http_build_query(array("q" => $soqlQuery));
+        }
 
         $response = WorkbenchContext::get()->getRestDataConnection()->send("GET", $url, null, null, false);
 
@@ -32,11 +37,6 @@ class RestQueryFutureTask extends QueryFutureTask {
         }
 
         return new RestQueryResult($result);
-    }
-
-    function query($soqlQuery,$queryAction,$queryLocator = null) {
-        if ($queryAction == 'QueryMore' && isset($queryLocator)) throw new WorkbenchHandledException("TODO: query more");
-        return $this->restQuery($queryAction, $soqlQuery);
     }
 
     function getQueryResultHeaders($sobject, $tail="") {
