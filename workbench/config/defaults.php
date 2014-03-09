@@ -584,6 +584,17 @@ $config["header_queryAndSearchOptions"] = array(
         "dataType" => "boolean"
     );
 
+    $config["queryEngine"] = array(
+        "label" => "Query Engine",
+        "description" => "Select which API to use for querying",
+        "default" => "SOAP",
+        "overrideable" => true,
+        "dataType" => "picklist",
+        "valuesToLabels" => array(
+            "SOAP" => "SOAP",
+            "REST" => "REST"
+        )
+    );
 
 $config["header_PackageVersion"] = array(
     "label" => "Package Version",

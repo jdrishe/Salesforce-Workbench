@@ -4,6 +4,8 @@ require_once 'soxl/QueryObjects.php';
 require_once 'session.php';
 require_once 'shared.php';
 require_once 'async/QueryFutureTask.php';
+require_once 'async/SoapQueryFutureTask.php';
+require_once 'async/RestQueryFutureTask.php';
 
 //clear all saved queries in cookies
 // TODO: remove after next version
@@ -49,7 +51,7 @@ if (isset($_POST['queryMore']) && isset($_POST['queryLocator'])) {
     require_once 'header.php';
     displayQueryForm($queryRequest);
     $queryRequest->setQueryAction('QueryMore');
-    $asyncJob = new QueryFutureTask($queryRequest, $_POST['queryLocator']);
+    $asyncJob = createQueryTask($queryRequest, $_POST['queryLocator']);
     echo $asyncJob->perform();
     include_once 'footer.php';
 } else if (isset($_POST['querySubmit']) && $_POST['querySubmit']=='Query' && $queryRequest->getSoqlQuery() != null && ($queryRequest->getExportTo() == 'screen' || $queryRequest->getExportTo() == 'matrix')) {
@@ -62,7 +64,7 @@ if (isset($_POST['queryMore']) && isset($_POST['queryLocator'])) {
     echo "<p><a name='qr'>&nbsp;</a></p>";
 
     echo updateUrlScript($queryRequest);
-    $asyncJob = new QueryFutureTask($queryRequest);
+    $asyncJob = createQueryTask($queryRequest);
     echo $asyncJob->enqueueOrPerform();
     include_once 'footer.php';
 } else if (isset($_POST['querySubmit']) && $_POST['querySubmit']=='Query' && $queryRequest->getSoqlQuery() != null && strpos($queryRequest->getExportTo(), 'async_') === 0) {
@@ -75,7 +77,7 @@ if (isset($_POST['queryMore']) && isset($_POST['queryLocator'])) {
     }
 } else if (isset($_POST['querySubmit']) && $_POST['querySubmit']=='Query' && $queryRequest->getSoqlQuery() != null && $queryRequest->getExportTo() == 'csv') {
     if (stripos($_POST['soql_query'], "count()") == false) {
-        $task = new QueryFutureTask($queryRequest);
+        $task = createQueryTask($queryRequest);
         $records = $task->query($queryRequest->getSoqlQuery(),$queryRequest->getQueryAction(),null,true);
         $task->exportQueryAsCsv($records,$queryRequest->getExportTo());
     } else {
@@ -345,6 +347,17 @@ function updateUrlScript($queryRequest) {
 function qrjb($queryRequest) {
     return  basename($_SERVER['SCRIPT_NAME']) . '?qrjb=' . urlencode(base64_encode($queryRequest->toJson())) .
         (WorkbenchConfig::get()->value("autoJumpToResults") ? '#qr' : '');
+}
+
+function createQueryTask($queryRequest, $queryLocator = null) {
+    switch (WorkbenchConfig::get()->value("queryEngine")) {
+        case "SOAP":
+            return new SoapQueryFutureTask($queryRequest, $queryLocator);
+        case "REST":
+            return new RestQueryFutureTask($queryRequest, $queryLocator);
+        default:
+            throw new WorkbenchHandledException("Unknown query engine");
+    }
 }
 
 ?>
