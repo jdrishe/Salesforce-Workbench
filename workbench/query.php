@@ -6,7 +6,7 @@ require_once 'shared.php';
 require_once 'async/QueryFutureTask.php';
 require_once 'async/SoapQueryFutureTask.php';
 require_once 'async/RestQueryFutureTask.php';
-
+require_once 'restclient/RestObjects.php';
 //clear all saved queries in cookies
 // TODO: remove after next version
 $persistedSavedQueryRequestsKey = "PSQR@";
