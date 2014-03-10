@@ -221,12 +221,12 @@ abstract class QueryFutureTask extends FutureTask {
 
         print "<a name='qr'></a><div style='clear: both;'><br/><h2>Query Results</h2>\n";
 
-        if (isset($this->queryLocator)) {
-            preg_match("/-(\d+)/", $this->queryLocator, $lastRecord);
-            $rowOffset = $lastRecord[1];
-        } else {
+//        if (isset($this->queryLocator)) {
+//            preg_match("/-(\d+)/", $this->queryLocator, $lastRecord);
+//            $rowOffset = $lastRecord[1];
+//        } else {
             $rowOffset = 0;
-        }
+//        }
 
         $minRowNum = $rowOffset + 1;
         $maxRowNum = $rowOffset + count($records);
@@ -234,20 +234,20 @@ abstract class QueryFutureTask extends FutureTask {
         print "<p>Returned records $minRowNum - $maxRowNum of " . $this->totalQuerySize . " total record" .
               ($this->totalQuerySize !== 1 ? "s": "") . " in " . sprintf ("%01.3f", $queryTimeElapsed) . " seconds:</p>\n";
 
-        if (!WorkbenchConfig::get()->value("autoRunQueryMore") && $this->nextQueryLocator) {
-            print "<p><input type='hidden' name='queryLocator' value='" . $this->nextQueryLocator . "' /></p>\n";
-            print "<p><input type='submit' name='queryMore' id='queryMoreButtonTop' value='More...' /></p>\n";
-        }
+//        if (!WorkbenchConfig::get()->value("autoRunQueryMore") && $this->nextQueryLocator) {
+//            print "<p><input type='hidden' name='queryLocator' value='" . $this->nextQueryLocator . "' /></p>\n";
+//            print "<p><input type='submit' name='queryMore' id='queryMoreButtonTop' value='More...' /></p>\n";
+//        }
 
         print addLinksToIds($queryRequest->getExportTo() == 'matrix'
             ? $this->createQueryResultsMatrix($records, $queryRequest->getMatrixCols(), $queryRequest->getMatrixRows())
             : $this->createQueryResultTable($records, $minRowNum)
         );
 
-        if (!WorkbenchConfig::get()->value("autoRunQueryMore") && $this->nextQueryLocator) {
-            print "<p><input type='hidden' name='queryLocator' value='" . $this->nextQueryLocator . "' /></p>\n";
-            print "<p><input type='submit' name='queryMore' id='queryMoreButtonBottom' value='More...' /></p>";
-        }
+//        if (!WorkbenchConfig::get()->value("autoRunQueryMore") && $this->nextQueryLocator) {
+//            print "<p><input type='hidden' name='queryLocator' value='" . $this->nextQueryLocator . "' /></p>\n";
+//            print "<p><input type='submit' name='queryMore' id='queryMoreButtonBottom' value='More...' /></p>";
+//        }
 
         print    "</form></div>\n";
     }
