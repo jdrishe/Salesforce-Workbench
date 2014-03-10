@@ -4,6 +4,8 @@ require_once 'config/constants.php';
 require_once 'config/WorkbenchConfig.php';
 require_once 'context/WorkbenchContext.php';
 require_once 'soxl/QueryObjects.php';
+require_once "restclient/RestObjects.php";
+
 foreach (scandir('async') as $f) {
     if ($f == "." || $f == "..") continue;
     require_once "async/$f";

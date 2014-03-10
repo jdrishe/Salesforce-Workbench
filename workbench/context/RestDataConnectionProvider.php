@@ -1,6 +1,7 @@
 <?php
 require_once "context/AbstractConnectionProvider.php";
 require_once "restclient/RestClient.php";
+require_once "restclient/RestObjects.php";
 
 class RestDataConnectionProvider extends AbstractConnectionProvider {
     function establish(ConnectionConfiguration $connConfig) {
