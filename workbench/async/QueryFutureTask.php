@@ -152,15 +152,16 @@ abstract class QueryFutureTask extends FutureTask {
     }
 
     function createQueryResultTable($records, $rowNum) {
+        $headerRecord = $records[0];
+        if (!$headerRecord instanceof SObject) {
+            $headerRecord = new SObject($records[0]);
+        }
+
         $table = "<table id='query_results' class='" . getTableClass() . "'>\n";
 
         //call shared recusive function above for header printing
         $table .= "<tr><th>&nbsp;</th><th>";
-        if ($records[0] instanceof SObject) {
-            $table .= implode("</th><th>", $this->getQueryResultHeaders($records[0]));
-        } else {
-            $table .= implode("</th><th>", $this->getQueryResultHeaders(new SObject($records[0])));
-        }
+        $table .= implode("</th><th>", $this->getQueryResultHeaders($headerRecord));
         $table .= "</th></tr>\n";
 
 
