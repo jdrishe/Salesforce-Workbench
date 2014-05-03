@@ -11,14 +11,14 @@ class RestSObject extends SObject {
             foreach (get_object_vars($response) as $name => $value) {
                 if ($name == "attributes") {
                     continue;
-                } else if (isset($value->attributes)) {
-                    $this->anyFields[$name] = new RestSObject($value);
                 } else if (isset($value->totalSize, $value->done)) {
+                    // child relationships
                     $this->anyFields[$name] = new RestQueryResult($value);
-                } else if (endsWith($name,'Address', false) && WorkbenchContext::get()->isApiVersionAtLeast(30.0) && $value instanceof stdClass ) {
-                    // TODO: Address and > 30.0 guard should not be needed, but protecting against other stdClass results that might leak in
+                } else if ($value instanceof stdClass) {
+                    // compound fields and parent relationships
                     $this->anyFields[$name] = new RestSObject($value);
                 } else {
+                    // standard values
                     $this->anyFields[$name] = $value;
                 }
             }
