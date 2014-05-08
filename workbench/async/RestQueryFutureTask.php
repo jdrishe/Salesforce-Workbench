@@ -86,5 +86,28 @@ class RestQueryFutureTask extends QueryFutureTask {
 
         return localizeDateTimes($rowBuffer);
     }
+
+    function getQueryResultFieldValue($sobject, $fieldName, $escapeHtmlChars=true) {
+        $fieldValue = null;
+        if (isset($sobject->anyFields)) {
+            $fieldNamePath = explode('.', $fieldName);
+            $path = $sobject->anyFields;
+            foreach ($fieldNamePath as $fieldNamePathPart) {
+                if ($path instanceof RestSObject) {
+                    $path = $path->anyFields;
+                }
+                $path = $path[$fieldNamePathPart];
+            }
+            $anyFieldValue = $path;
+            if ($anyFieldValue instanceof RestSObject) {
+                $fieldValue = $this->getQueryResultFieldValue($anyFieldValue,$fieldName,$escapeHtmlChars);
+            } else if ($anyFieldValue instanceof RestQueryResult) {
+                $fieldValue = $anyFieldValue;
+            } else {
+                $fieldValue = $escapeHtmlChars ? htmlspecialchars($anyFieldValue,ENT_QUOTES) : $anyFieldValue;
+            }
+        }
+        return localizeDateTimes($fieldValue);
+    }
 }
 ?>

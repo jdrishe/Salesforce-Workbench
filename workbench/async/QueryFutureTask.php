@@ -152,16 +152,19 @@ abstract class QueryFutureTask extends FutureTask {
     }
 
     function createQueryResultTable($records, $rowNum) {
-        $headerRecord = $records[0];
-        if (!$headerRecord instanceof SObject) {
-            $headerRecord = new SObject($records[0]);
+        $headers = array();
+        foreach ($records as $record) {
+            if (!$record instanceof SObject) {
+                $record = new SObject($record);
+            }
+            $headers = array_unique(array_merge($headers, $this->getQueryResultHeaders($record)));
         }
 
         $table = "<table id='query_results' class='" . getTableClass() . "'>\n";
 
         //call shared recusive function above for header printing
         $table .= "<tr><th>&nbsp;</th><th>";
-        $table .= implode("</th><th>", $this->getQueryResultHeaders($headerRecord));
+        $table .= implode("</th><th>", $headers);
         $table .= "</th></tr>\n";
 
 
@@ -170,25 +173,20 @@ abstract class QueryFutureTask extends FutureTask {
             //call shared recusive function above for row printing
             $table .= "<tr><td>" . $rowNum++ . "</td><td>";
 
-            if ($record instanceof SObject) {
-                $row = $this->getQueryResultRow($record);
-            } else {
-                $row = $this->getQueryResultRow(new SObject($record));
-            }
-
-
-            for ($i = 0; $i < count($row); $i++) {
-                if($row[$i] instanceof QueryResult && !is_array($row[$i])) $row[$i] = array($row[$i]);
-                if (isset($row[$i][0]) && $row[$i][0] instanceof QueryResult) {
-                    foreach ($row[$i] as $qr) {
+            $lastFieldName = end($headers);
+            foreach ($headers as $fieldName) {
+                $fieldValue = $this->getQueryResultFieldValue($record, $fieldName);
+                if ($fieldValue instanceof QueryResult && !is_array($fieldValue)) $fieldValue = array($fieldValue);
+                if (isset($fieldValue[0]) && $fieldValue[0] instanceof QueryResult) {
+                    foreach ($fieldValue as $qr) {
                         $table .= $this->createQueryResultTable($qr->records, 1);
-                        if($qr != end($row[$i])) $table .= "</td><td>";
+                        if($qr != end($fieldValue)) $table .= "</td><td>";
                     }
                 } else {
-                    $table .= $row[$i];
+                    $table .= $fieldValue;
                 }
 
-                if ($i+1 != count($row)) {
+                if ($fieldName != $lastFieldName) {
                     $table .= "</td><td>";
                 }
             }
