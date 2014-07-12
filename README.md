@@ -22,6 +22,9 @@ which is great for spinning up a public instance during development in a fork.
 For installation of Workbench, please see the [installation](http://wiki.developerforce.com/index.php/Workbench#Installation)
 section of the [wiki](http://wiki.developerforce.com/index.php/Workbench).
 
+[![Deploy on Heroku](https://i.cloudup.com/sjLqTMcojN.svg)](https://heroku.com/deploy)
+
+
 Support
 -------
 If you running into problems, post a message on the Workbench [discussion group](http://groups.google.com/group/forceworkbench).
