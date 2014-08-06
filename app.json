@@ -17,7 +17,7 @@
         "forceworkbench__loginCsrfEnabled__default": "true",
         "forceworkbench__streamingAdviceTimeout__default": "10000"
     },
-    "addons": ["redistogo"],
+    "addons": ["redistogo:mini"],
     "formation": [
         { "process": "web",    "quantity": 1, "size": "1X" },
         { "process": "worker", "quantity": 1, "size": "1X" }
