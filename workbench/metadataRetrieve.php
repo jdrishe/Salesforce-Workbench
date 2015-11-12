@@ -20,6 +20,7 @@ if (isset($_POST['retrievalConfirmed']) && isset($_POST["retrieveRequestId"])) {
     }
 
     unset($_SESSION[$retrieveRequestId]);
+    session_write_close();
     header("Location: metadataStatus.php?asyncProcessId=" . $retrieveAsyncResults->id . "&op=R");
 }
 
@@ -59,6 +60,7 @@ else if (isset($_POST['stageForRetrieval'])) {
 
     $retrieveRequestId = "RR-" . time();
     $_SESSION[$retrieveRequestId] = $retrieveRequest;
+    session_write_close();
 
     require_once 'header.php';
     displayInfo("Successfully staged retrieve request.");

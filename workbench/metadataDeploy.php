@@ -28,6 +28,7 @@ if (isset($_POST['deploymentConfirmed']) && isset($_POST["deployFileTmpName"])) 
         $deployAsyncResults = WorkbenchContext::get()->getMetadataConnection()->deploy($_SESSION[$deployFileTmpName], $_SESSION[$deployFileTmpName . "_OPTIONS"]);
         unset($_SESSION[$deployFileTmpName]);
         unset($_SESSION[$deployFileTmpName . "_OPTIONS"]);
+        session_write_close();
 
         if (!isset($deployAsyncResults->id)) {
             displayError("Unknown deployment error.\n" . isset($deployAsyncResults->message) ? $deployAsyncResults->message : "", true, true);
@@ -56,6 +57,7 @@ else if (isset($_POST['stageForDeployment'])) {
     }
     $_SESSION[$deployFileTmpName] = $deployFileContents;
     $_SESSION[$deployFileTmpName . "_OPTIONS"] = deserializeDeployOptions($_POST);
+    session_write_close();
 
     require_once 'header.php';
     print "<p/>";

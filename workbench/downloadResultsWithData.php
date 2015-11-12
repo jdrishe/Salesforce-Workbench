@@ -1,6 +1,7 @@
 <?php
 require_once 'session.php';
 require_once 'shared.php';
+session_write_close();
 
 if (isset($_SESSION['resultsWithData'])) {
     $csvFile = fopen('php://output','w') or die("Error opening php://output");

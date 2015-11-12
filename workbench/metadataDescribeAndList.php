@@ -76,6 +76,7 @@ if (isset($typeString)) {
     }
     $type = $metadataTypeMap[$typeString];
     $_SESSION['defaultMetadataType'] = $typeString;
+    session_write_close();
 
     $metadataComponents = listMetadata($type);
     $componentsLabel = "Components (" . count($metadataComponents) . ")";

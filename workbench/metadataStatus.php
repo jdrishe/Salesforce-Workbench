@@ -20,6 +20,7 @@ if (isset($asyncProcessId) && isset($_GET['downloadZip'])) {
     header("Content-Disposition: attachment; filename=retrieve_$asyncProcessId.zip");
     print $_SESSION['retrievedZips'][$asyncProcessId];
     unset($_SESSION['retrievedZips'][$asyncProcessId]);
+    session_write_close();
     exit;
 }
 
@@ -200,6 +201,7 @@ try {
                 $_SESSION['retrievedZips'][$asyncResults->id] = $results->retrieveResult->zipFile;
                 unset($results->retrieveResult->zipFile);
             }
+            session_write_close();
 
             displayInfo("Retrieve result ZIP file is ready for download.");
             print "<p/>";

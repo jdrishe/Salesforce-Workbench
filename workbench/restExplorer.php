@@ -7,6 +7,7 @@ require_once 'shared.php';
 
 if(!isset($_SESSION['restExplorerController']) || isset($_GET['reset'])) {
     $_SESSION['restExplorerController'] = new RestExplorerController();
+    session_write_close();
 }
 $c = $_SESSION['restExplorerController'];
 $c->onPageLoad();

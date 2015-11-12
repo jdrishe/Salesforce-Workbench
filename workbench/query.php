@@ -40,6 +40,7 @@ if (isset($_GET['qrjb'])) {
 }
 
 $_SESSION['lastQueryRequest'] = $queryRequest;
+session_write_close();
 
 //Main form logic: When the user first enters the page, display form defaulted to
 //show the query results with default object selected on a previous page, otherwise

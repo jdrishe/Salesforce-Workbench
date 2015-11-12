@@ -34,6 +34,7 @@ if (isset($_GET['srjb'])) {
 }
 
 $_SESSION['lastSearchRequest'] = $searchRequest;
+session_write_close();
 
 //Main form logic: When the user first enters the page, display form defaulted to
 //show the search results with default object selected on a previous page, otherwise

@@ -56,35 +56,42 @@ function put($action) {
             $action = 'hardDelete';
         }
 
+        $fieldMap = isset($_SESSION['field_map']) ? $_SESSION['field_map'] : null;
+        $csvArray = isset($_SESSION['csv_array']) ? $_SESSION['csv_array'] : null;
+        $tempZipFile = isset($_SESSION['tempZipFile']) ? $_SESSION['tempZipFile'] : null;
+        unset($_SESSION['field_map'],$_SESSION['csv_array'],$_SESSION['_ext_id'],$_SESSION['file_tmp_name'],$_SESSION['tempZipFile']);
+        session_write_close();
+
         if (isset($_POST['doAsync'])) {
+
             putAsync(
                 $action,
                 $extId,
-                isset($_SESSION['field_map']) ? $_SESSION['field_map'] : null,
-                isset($_SESSION['csv_array']) ? $_SESSION['csv_array'] :  null,
-                isset($_SESSION['tempZipFile']) ? $_SESSION['tempZipFile'] :  null,
+                $fieldMap,
+                $csvArray,
+                $tempZipFile,
                 isset($_POST['contentType']) ? $_POST['contentType'] :  null);
         } else {
             require_once 'header.php';
             $apiCall = ($action == 'insert') ? 'create' : $action;
+
             if ($action == "insert" || $action == "update" || $action == "upsert") {
                 putSync(
-                $apiCall,
-                $extId,
-                isset($_SESSION['field_map']) ? $_SESSION['field_map'] : null,
-                isset($_SESSION['csv_array']) ? $_SESSION['csv_array'] : null,
-                true);
+                    $apiCall,
+                    $extId,
+                    $fieldMap,
+                    $csvArray,
+                    true);
             } else {
                 putSyncIdOnly(
                     $action,
-                    isset($_SESSION['field_map']) ? $_SESSION['field_map'] : null,
-                    isset($_SESSION['csv_array']) ? $_SESSION['csv_array'] : null,
+                    $fieldMap,
+                    $csvArray,
                     true
                 );
             }
             include_once 'footer.php';
         }
-        unset($_SESSION['field_map'],$_SESSION['csv_array'],$_SESSION['_ext_id'],$_SESSION['file_tmp_name'],$_SESSION['tempZipFile']);
     } else if (isset($_POST['action']) && $_POST['action'] == 'Map Fields') {
         require_once 'header.php';
         array_pop($_POST); //remove header row
@@ -103,6 +110,7 @@ function put($action) {
 
         $fieldNames = fieldsToNameArray($fields);
         $_SESSION['field_map'] = convertFieldMapToArray($_POST, $fieldNames);
+        session_write_close();
         confirmFieldMappings(
             $confirmAction,
             $_SESSION['field_map'],
@@ -112,6 +120,7 @@ function put($action) {
         include_once 'footer.php';
     } else if (isset($_REQUEST['sourceType']) && $_REQUEST['sourceType'] == "singleRecord") {
         require_once 'header.php';
+        session_write_close();
         setFieldMappings($action, false);
         include_once 'footer.php';
     } else if (isset($_REQUEST['sourceType']) && $_REQUEST['sourceType'] == "file" && isset($_FILES['file'])) {
@@ -130,6 +139,7 @@ function put($action) {
             $csvFileName = basename($_FILES['file']['name']);
             $_SESSION['file_tmp_name'] = $_FILES['file']['tmp_name'];
             $_SESSION['csv_array'] = convertCsvFileToArray($_SESSION['file_tmp_name']);
+            session_write_close();
             $csvArrayCount = count($_SESSION['csv_array']) - 1;
             if (!$csvArrayCount) {
                 displayError("The file uploaded contains no records. Please try again.", false, true);
@@ -153,6 +163,7 @@ function put($action) {
             }
             
             $_SESSION['tempZipFile'] = file_get_contents($_FILES['file']['tmp_name']);
+            session_write_close();
             displayInfo(array("Successfully staged " . ceil(($_FILES["file"]["size"] / 1024)) . " KB zip file " . $_FILES["file"]["name"] . " for $action via the Bulk API. ", 
                         "Note, custom field mappings are not available for ZIP-based requests."));
             print "<br/>";
@@ -192,6 +203,7 @@ function put($action) {
         include_once 'footer.php';
     } else {
         unset($_SESSION['field_map'],$_SESSION['csv_array'],$_SESSION['_ext_id'],$_SESSION['file_tmp_name'],$_SESSION['tempZipFile']);
+        session_write_close();
         displayUploadFileWithObjectSelectionForm($action);
     }
 }

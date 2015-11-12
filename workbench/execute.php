@@ -18,7 +18,7 @@ if (isset($_POST['execute'])) {
     $_SESSION['LogCategory'] = WorkbenchConfig::get()->value("defaultLogCategory");
     $_SESSION['LogCategoryLevel'] = WorkbenchConfig::get()->value("defaultLogCategoryLevel");
 }
-
+session_write_close();
 
 ?>
 <form id="executeForm" action="" method="POST">
